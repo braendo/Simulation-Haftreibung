@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Haftreibung an der schiefen Ebene – Simulation, Quiz &amp; Aufgaben</title>
+<title>Haftreibung an der schiefen Ebene - Simulation, Quiz &amp; Aufgaben</title>
 <style>
   :root {
     --brand:       #534AB7;
@@ -481,7 +481,7 @@
 <body>
 <div class="container">
   <h1>Haftreibung an der schiefen Ebene</h1>
-  <p class="subtitle">Wann bleibt ein Block liegen – und wann beginnt er zu rutschen?</p>
+  <p class="subtitle">Wann bleibt ein Block liegen - und wann beginnt er zu rutschen?</p>
 
   <div class="tabs" role="tablist">
     <button class="tab active" role="tab" aria-selected="true" onclick="switchTab('simulation')">schiefe Ebene</button>
@@ -511,6 +511,11 @@
         <label class="single-toggle">
           <input type="checkbox" id="zeitlupeIn">
           <span>🐢 Zeitlupe (¼×)</span>
+        </label>
+
+        <label class="single-toggle">
+          <input type="checkbox" id="pauseIn">
+          <span>⏸ Zeit anhalten</span>
         </label>
 
         <button class="screenshot-btn" id="screenshotBtn" aria-label="Screenshot der Simulation herunterladen">📸 Screenshot</button>
@@ -598,6 +603,11 @@
           <span>🐢 Zeitlupe (¼×)</span>
         </label>
 
+        <label class="single-toggle">
+          <input type="checkbox" id="pauseInW">
+          <span>⏸ Zeit anhalten</span>
+        </label>
+
         <button class="screenshot-btn" id="screenshotBtnW" aria-label="Screenshot der Simulation herunterladen">📸 Screenshot</button>
 
         <div class="slider-group">
@@ -662,7 +672,7 @@
 
       <!-- 1. Haftreibung -->
       <h3 style="font-size:16px; font-weight:700; margin:20px 0 8px;">1. Die Haftreibung</h3>
-      <p><b>Beschreibung:</b> Die Haftreibung <span class="vec">F</span><sub>HR</sub> verhindert, dass ein ruhender Körper anfängt zu gleiten. Sie wirkt nur, solange der Körper in Ruhe ist. Dabei passt sie sich automatisch an die angreifende Kraft (z.&nbsp;B. die Hangabtriebskraft) an – sie ist also keine feste Größe, sondern wächst mit dieser Kraft mit. Erst wenn die angreifende Kraft den Maximalwert <span class="vec">F</span><sub>HR,max</sub> überschreitet, beginnt der Körper zu gleiten.</p>
+      <p><b>Beschreibung:</b> Die Haftreibung <span class="vec">F</span><sub>HR</sub> verhindert, dass ein ruhender Körper anfängt zu gleiten. Sie wirkt nur, solange der Körper in Ruhe ist. Dabei passt sie sich automatisch an die angreifende Kraft (z.&nbsp;B. die Hangabtriebskraft) an - sie ist also keine feste Größe, sondern wächst mit dieser Kraft mit. Erst wenn die angreifende Kraft den Maximalwert <span class="vec">F</span><sub>HR,max</sub> überschreitet, beginnt der Körper zu gleiten.</p>
       <p style="text-align:center; font-weight:700; text-decoration:underline; margin:10px 0;">Die Haftreibung hängt nicht von der Größe der Auflagefläche ab!</p>
       <div class="formula-box" style="font-size:17px;">
         |<span class="vec">F</span><sub>HR,max</sub>| &nbsp;=&nbsp; |<span class="vec">F</span><sub>N</sub>| &nbsp;·&nbsp; μ<sub>HR</sub>
@@ -788,6 +798,7 @@ function switchTab(tab) {
   const showAngle = document.getElementById('showAngle');
   const useGleit = document.getElementById('useGleit');
   const zeitlupeIn = document.getElementById('zeitlupeIn');
+  const pauseIn = document.getElementById('pauseIn');
   const resetBtn = document.getElementById('resetBtn');
   const screenshotBtn = document.getElementById('screenshotBtn');
 
@@ -1019,7 +1030,7 @@ function switchTab(tab) {
   }
 
   function drawBlock() {
-    const blockSize = Math.max(28, Math.min(46, SCALE * 0.32));
+    const blockSize = Math.max(38, Math.min(60, SCALE * 0.44));
     const c = bodyCenter(state.s, blockSize);
     ctx.save();
     ctx.translate(c.x, c.y);
@@ -1045,8 +1056,10 @@ function switchTab(tab) {
   }
 
   function adaptiveFScale(FG) {
-    // Max. Kraft ≈ 120 px lang
-    return 120 / Math.max(1, FG);
+    // Feste Skalierung, damit F_G und F_N mit der Masse mitwachsen.
+    // Bei m_max = 20 kg ist F_G ≈ 196 N → Pfeil ca. 140 px.
+    const FG_REF = 20 * G;
+    return 140 / FG_REF;
   }
 
   function drawForces(center) {
@@ -1134,9 +1147,10 @@ function switchTab(tab) {
   }
 
   function drawScaleBar() {
-    const x = 14, y = CH - 14;
-    const len = SCALE; // entspricht 1 m
     ctx.save();
+    // ─── Längen-Maßstab: 1 m ───
+    const x = 14, y = CH - 14;
+    const len = SCALE;
     ctx.strokeStyle = COLOR.text;
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
@@ -1148,6 +1162,19 @@ function switchTab(tab) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('1 m', x + len / 2, y - 6);
+
+    // ─── Kraft-Maßstab: 100 N ───
+    const fs = adaptiveFScale(mass * G);
+    const fLen = 100 * fs;
+    const fy = y - 22;
+    ctx.strokeStyle = COLOR.force;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + fLen, fy); ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x, fy - 4); ctx.lineTo(x, fy + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + fLen, fy - 4); ctx.lineTo(x + fLen, fy + 4); ctx.stroke();
+    ctx.fillStyle = COLOR.force;
+    ctx.fillText('100 N', x + fLen / 2, fy - 6);
     ctx.restore();
   }
 
@@ -1193,9 +1220,11 @@ function switchTab(tab) {
 
   function loop(t) {
     const slowFactor = zeitlupeIn.checked ? 0.25 : 1.0;
-    const dt = Math.min(0.05, (t - lastT) / 1000) * slowFactor;
+    const rawDt = Math.min(0.05, (t - lastT) / 1000);
     lastT = t;
-    step(dt);
+    if (!pauseIn.checked) {
+      step(rawDt * slowFactor);
+    }
     updateLivePanel();
     draw();
     rafId = requestAnimationFrame(loop);
@@ -1399,7 +1428,7 @@ function switchTab(tab) {
 })();
 
 // ════════════════════════════════════════════════════════════════════════
-// SIMULATION – WAAGRECHTE EBENE
+// SIMULATION - WAAGRECHTE EBENE
 // ════════════════════════════════════════════════════════════════════════
 (function(){
   const cv = document.getElementById('simW');
@@ -1423,6 +1452,7 @@ function switchTab(tab) {
   const showFZ = document.getElementById('showFZW');
   const showFR = document.getElementById('showFRW');
   const zeitlupeIn = document.getElementById('zeitlupeInW');
+  const pauseIn = document.getElementById('pauseInW');
   const resetBtn = document.getElementById('resetBtnW');
   const screenshotBtn = document.getElementById('screenshotBtnW');
 
@@ -1431,7 +1461,7 @@ function switchTab(tab) {
     brand:    '#534AB7',
     force:    '#D85A30',  // F_G
     FN:       '#185FA5',  // F_N
-    FZ:       '#27A567',  // F_Z (Zugkraft) – grün als „Antrieb"
+    FZ:       '#27A567',  // F_Z (Zugkraft) - grün als „Antrieb"
     FR:       '#7A4FB7',  // F_R
     velocity: '#378ADD',  // v
     text:     '#2C2C2A',
@@ -1473,7 +1503,7 @@ function switchTab(tab) {
   // Expose für switchTab
   window.__resizeWaagrecht = resizeCanvas;
 
-  function floorY() { return CH - 80; }
+  function floorY() { return CH - 115; }
   function trackX0() { return 40; }
   function trackX1() { return trackX0() + TRACK_LEN_M * SCALE; }
 
@@ -1565,7 +1595,7 @@ function switchTab(tab) {
   }
 
   function drawBlock() {
-    const blockSize = Math.max(34, Math.min(50, SCALE * 0.36));
+    const blockSize = Math.max(44, Math.min(64, SCALE * 0.48));
     const fy = floorY();
     const cx = trackX0() + state.x * SCALE;
     const cy = fy - blockSize / 2;
@@ -1592,7 +1622,9 @@ function switchTab(tab) {
   }
 
   function adaptiveFScale(maxVal) {
-    return 120 / Math.max(1, maxVal);
+    // Feste Skalierung, damit F_G und F_N mit der Masse mitwachsen.
+    // Referenz: 200 N (entspricht m_max bzw. F_Z,max) → Pfeil ca. 140 px.
+    return 140 / 200;
   }
 
   function drawForces(center) {
@@ -1655,9 +1687,10 @@ function switchTab(tab) {
   }
 
   function drawScaleBar() {
+    ctx.save();
+    // ─── Längen-Maßstab: 1 m ───
     const x = 14, y = CH - 14;
     const len = SCALE;
-    ctx.save();
     ctx.strokeStyle = COL.text;
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
@@ -1669,6 +1702,19 @@ function switchTab(tab) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('1 m', x + len / 2, y - 6);
+
+    // ─── Kraft-Maßstab: 100 N ───
+    const fs = adaptiveFScale(100);
+    const fLen = 100 * fs;
+    const fy = y - 22;
+    ctx.strokeStyle = COL.force;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + fLen, fy); ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x, fy - 4); ctx.lineTo(x, fy + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + fLen, fy - 4); ctx.lineTo(x + fLen, fy + 4); ctx.stroke();
+    ctx.fillStyle = COL.force;
+    ctx.fillText('100 N', x + fLen / 2, fy - 6);
     ctx.restore();
   }
 
@@ -1716,9 +1762,11 @@ function switchTab(tab) {
 
   function loop(t) {
     const slowFactor = zeitlupeIn.checked ? 0.25 : 1.0;
-    const dt = Math.min(0.05, (t - lastT) / 1000) * slowFactor;
+    const rawDt = Math.min(0.05, (t - lastT) / 1000);
     lastT = t;
-    step(dt);
+    if (!pauseIn.checked) {
+      step(rawDt * slowFactor);
+    }
     updateStatus();
     draw();
     rafId = requestAnimationFrame(loop);
