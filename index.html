@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haftreibung an der schiefen Ebene – Simulation, Quiz &amp; Aufgaben</title>
+<style>
+  :root {
+    --brand:       #534AB7;
+    --brand-dark:  #3C3489;
+    --brand-light: #EEEDFE;
+    --bg:          #f5f5f0;
+    --surface:     #ffffff;
+    --surface-2:   #eceae3;
+    --text-1:      #2C2C2A;
+    --text-2:      #5F5E5A;
+    --text-3:      #888780;
+    --border:      rgba(0,0,0,0.15);
+    --correct:     #EAF3DE;
+    --correct-txt: #27500A;
+    --correct-brd: #639922;
+    --incorrect:   #FCEBEB;
+    --incorrect-txt:#791F1F;
+    --incorrect-brd:#E24B4A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: var(--bg);
+    color: var(--text-1);
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 6px; }
+  .subtitle { font-size: 14px; color: var(--text-2); margin: 0 0 20px; }
+
+  /* Vektor-Pfeil über dem Symbol */
+  .vec {
+    display: inline-block;
+    position: relative;
+    font-style: italic;
+    padding-right: 2px;
+  }
+  .vec::after {
+    content: '\20D7';
+    position: absolute;
+    top: -0.35em;
+    right: -0.1em;
+    font-size: 0.85em;
+    font-style: normal;
+  }
+  sub, sup { font-style: normal; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 0.5px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-2);
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab:hover { color: var(--text-1); }
+  .tab.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+
+  .canvas-wrap {
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 10px;
+    position: relative;
+  }
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .status-box {
+    margin-top: 12px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+  .status-box .head {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+  .status-box.bleibt {
+    background: var(--correct);
+    color: var(--correct-txt);
+    border-color: var(--correct-brd);
+  }
+  .status-box.rutscht {
+    background: var(--incorrect);
+    color: var(--incorrect-txt);
+    border-color: var(--incorrect-brd);
+  }
+
+  .controls {
+    display: flex; flex-direction: column; gap: 16px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .btn-row { display: flex; gap: 8px; }
+  button {
+    flex: 1; padding: 8px 12px; font-size: 14px;
+    border: 0.5px solid rgba(0,0,0,0.3);
+    background: var(--surface); border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+    font-family: inherit; color: inherit;
+  }
+  button:hover:not(:disabled) { background: #f1efe8; }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .primary-btn {
+    background: var(--brand);
+    color: white;
+    border-color: var(--brand);
+  }
+  .primary-btn:hover:not(:disabled) {
+    background: var(--brand-dark) !important;
+  }
+  .screenshot-btn {
+    background: var(--brand);
+    color: white;
+    border-color: var(--brand);
+  }
+  .screenshot-btn:hover { background: var(--brand-dark); }
+  .speed-btn { font-size: 13px; }
+  .speed-active {
+    background: var(--brand) !important;
+    color: white !important;
+    border-color: var(--brand) !important;
+  }
+
+  .slider-group { display: flex; flex-direction: column; gap: 8px; }
+  .slider-group label {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: var(--text-2);
+  }
+  .slider-group .value { font-weight: 500; color: var(--text-1); }
+  .slider-controls {
+    display: flex; gap: 8px; align-items: center;
+  }
+  input[type="range"] { flex: 1; accent-color: var(--brand); }
+  .value-input {
+    width: 70px;
+    padding: 4px 8px;
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    text-align: center;
+    font-family: inherit;
+  }
+  .value-input:focus { outline: none; border-color: var(--brand); }
+
+  select.material-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-1);
+    cursor: pointer;
+  }
+  select.material-select:focus { outline: none; border-color: var(--brand); }
+
+  .group-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  .checkbox-group {
+    border-top: 0.5px solid var(--border);
+    padding-top: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    font-size: 13px;
+  }
+  .checkbox-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .checkbox-group input { width: 16px; height: 16px; accent-color: var(--brand); }
+
+  .single-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .single-toggle input { width: 16px; height: 16px; accent-color: var(--brand); }
+  .single-toggle:hover { background: #f1efe8; }
+
+  .live-panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .live-panel h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-3);
+    font-weight: 500;
+  }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .live-row .lbl { color: var(--text-2); }
+  .live-row .val { font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text-1); }
+
+  .hint-box {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: var(--brand-light);
+    border: 0.5px solid var(--brand);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #312A6E;
+  }
+  .hint-box .title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--brand-dark);
+  }
+  .hint-box .formula {
+    font-family: "Courier New", monospace;
+    background: rgba(83, 74, 183, 0.08);
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin: 6px 0;
+    display: block;
+  }
+  .hint-box .note {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--brand-dark);
+    font-style: italic;
+  }
+
+  /* Quiz */
+  .quiz-container { display: flex; flex-direction: column; gap: 20px; }
+  .question-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .question-type {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .question-header {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: var(--text-1);
+    line-height: 1.5;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    padding: 12px 16px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .option:hover:not(.locked) {
+    background: #f1efe8;
+    border-color: rgba(0,0,0,0.25);
+  }
+  .option.selected {
+    background: var(--brand-light);
+    border-color: var(--brand);
+    color: var(--brand-dark);
+  }
+  .option.correct {
+    background: var(--correct);
+    border-color: var(--correct-brd);
+    color: var(--correct-txt);
+  }
+  .option.incorrect {
+    background: var(--incorrect);
+    border-color: var(--incorrect-brd);
+    color: var(--incorrect-txt);
+  }
+  .option.locked { cursor: default; }
+
+  .feedback {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .feedback.correct { background: var(--correct); color: var(--correct-txt); }
+  .feedback.incorrect { background: var(--incorrect); color: var(--incorrect-txt); }
+
+  .check-btn {
+    margin-top: 14px;
+    padding: 10px 18px;
+    background: var(--brand);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    font-family: inherit;
+    flex: 0 0 auto;
+  }
+  .check-btn:hover:not(:disabled) { background: var(--brand-dark); }
+  .check-btn:disabled { background: #D3D1C7; cursor: not-allowed; }
+
+  .quiz-summary {
+    background: var(--surface);
+    border: 2px solid var(--brand);
+    border-radius: 12px;
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .quiz-summary h2 { margin: 0 0 6px; font-weight: 500; font-size: 22px; color: var(--text-1); }
+  .score {
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--brand);
+    margin: 14px 0;
+  }
+  .score-msg { color: var(--text-2); font-size: 14px; margin-bottom: 16px; }
+
+  /* Rechenaufgaben */
+  .aufg-meta {
+    background: var(--surface-2);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin: 10px 0 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-1);
+  }
+  .aufg-meta .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .aufg-meta b { color: var(--brand-dark); font-weight: 600; }
+  .input-row {
+    display: flex; flex-wrap: wrap;
+    gap: 10px; align-items: center; margin-top: 10px;
+  }
+  .input-row label.field {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: var(--text-2);
+  }
+  .num-input {
+    width: 110px;
+    padding: 8px 10px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    text-align: right;
+  }
+  .num-input:focus { outline: none; border-color: var(--brand); }
+  .radio-row {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+  }
+  .radio-row label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+  .radio-row input { accent-color: var(--brand); }
+
+  .hint-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    color: var(--text-2);
+    font-family: inherit;
+    flex: 0 0 auto;
+  }
+  .hint-btn:hover { background: #f1efe8; }
+
+  .hint-content {
+    display: none;
+    background: #FFFBEA;
+    border: 0.5px solid #E8C84A;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #665A00;
+    margin-top: 10px;
+  }
+  .hint-content.show { display: block; }
+
+  .solution-box {
+    margin-top: 12px;
+    padding: 14px 16px;
+    background: var(--brand-light);
+    border-left: 3px solid var(--brand);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #312A6E;
+  }
+  .solution-box .step {
+    font-family: "Courier New", monospace;
+    background: rgba(255,255,255,0.5);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 4px 0;
+    display: block;
+    white-space: pre-wrap;
+  }
+  .solution-box .label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-family: inherit;
+    color: var(--brand-dark);
+  }
+
+  details.solution-details { margin-top: 8px; }
+  details.solution-details summary {
+    cursor: pointer;
+    color: var(--brand-dark);
+    font-weight: 500;
+    padding: 4px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Haftreibung an der schiefen Ebene</h1>
+  <p class="subtitle">Wann bleibt ein Block liegen – und wann beginnt er zu rutschen?</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab" aria-selected="true" onclick="switchTab('simulation')">schiefe Ebene</button>
+    <button class="tab" role="tab" aria-selected="false" onclick="switchTab('waagrecht')">waagrechte Ebene</button>
+    <button class="tab" role="tab" aria-selected="false" onclick="switchTab('erklaerung')">Erklärung</button>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- SIMULATION                                                       -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <div id="simulation-tab" class="tab-content active" role="tabpanel">
+    <div class="layout">
+      <div>
+        <div class="canvas-wrap">
+          <canvas id="sim" aria-label="Simulation der schiefen Ebene mit Quader"></canvas>
+        </div>
+
+        <div id="statusBox" class="status-box bleibt" aria-live="polite">
+          <div class="head" id="statusHead">BLOCK BLEIBT LIEGEN</div>
+          <div id="statusText"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="resetBtn" class="primary-btn" aria-label="Simulation zurücksetzen">↺ Zurücksetzen</button>
+
+        <label class="single-toggle">
+          <input type="checkbox" id="zeitlupeIn">
+          <span>🐢 Zeitlupe (¼×)</span>
+        </label>
+
+        <button class="screenshot-btn" id="screenshotBtn" aria-label="Screenshot der Simulation herunterladen">📸 Screenshot</button>
+
+        <div class="slider-group">
+          <label for="aIn"><span>Neigungswinkel α</span><span class="value" id="aOut">20°</span></label>
+          <div class="slider-controls">
+            <input id="aIn" type="range" min="0" max="60" value="20" step="1" aria-label="Neigungswinkel">
+            <input id="aText" class="value-input" type="text" value="20" aria-label="Neigungswinkel als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="mIn"><span>Masse m</span><span class="value" id="mOut">5,0 kg</span></label>
+          <div class="slider-controls">
+            <input id="mIn" type="range" min="10" max="200" value="50" step="5" aria-label="Masse in kg">
+            <input id="mText" class="value-input" type="text" value="5,0" aria-label="Masse als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="muIn"><span>Haftreibungskoeffizient μ<sub>H</sub></span><span class="value" id="muOut">0,40</span></label>
+          <div class="slider-controls">
+            <input id="muIn" type="range" min="0" max="100" value="40" step="1" aria-label="Haftreibungskoeffizient">
+            <input id="muText" class="value-input" type="text" value="0,40" aria-label="Haftreibungskoeffizient als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="materialSelect"><span>Material&shy;paarung</span></label>
+          <select id="materialSelect" class="material-select" aria-label="Materialpaarung wählen">
+            <option value="custom">Benutzerdefiniert</option>
+            <option value="0.03">Stahl auf Eis (μ<sub>H</sub> = 0,03)</option>
+            <option value="0.15">Stahl auf Stahl (0,15)</option>
+            <option value="0.40" selected>Holz auf Metall (0,40)</option>
+            <option value="0.50">Holz auf Holz (0,50)</option>
+            <option value="0.60">Leder auf Metall (0,60)</option>
+            <option value="0.90">Gummi auf Asphalt (0,90)</option>
+          </select>
+        </div>
+
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="showFG" checked>
+            <span>F<sub>G</sub> (Gewichtskraft)</span>
+          </label>
+          <label><input type="checkbox" id="showComp" checked>
+            <span>Zerlegung F<sub>H</sub> und F<sub>N</sub></span>
+          </label>
+          <label><input type="checkbox" id="showFR" checked>
+            <span>F<sub>R</sub> (Reibungskraft)</span>
+          </label>
+          <label><input type="checkbox" id="showAngle" checked>
+            <span>Winkelbogen α</span>
+          </label>
+          <label><input type="checkbox" id="useGleit">
+            <span>Gleitreibung einbeziehen<br><span style="font-size:11px;color:var(--text-3);">(μ<sub>G</sub> = 0,7 · μ<sub>H</sub> nach dem Losrutschen)</span></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- WAAGRECHTE EBENE                                                 -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <div id="waagrecht-tab" class="tab-content" role="tabpanel">
+    <div class="layout">
+      <div>
+        <div class="canvas-wrap">
+          <canvas id="simW" aria-label="Simulation der waagrechten Ebene mit Quader"></canvas>
+        </div>
+
+        <div id="statusBoxW" class="status-box bleibt" aria-live="polite">
+          <div class="head" id="statusHeadW">BLOCK BLEIBT LIEGEN</div>
+          <div id="statusTextW"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="resetBtnW" class="primary-btn" aria-label="Simulation zurücksetzen">↺ Zurücksetzen</button>
+
+        <label class="single-toggle">
+          <input type="checkbox" id="zeitlupeInW">
+          <span>🐢 Zeitlupe (¼×)</span>
+        </label>
+
+        <button class="screenshot-btn" id="screenshotBtnW" aria-label="Screenshot der Simulation herunterladen">📸 Screenshot</button>
+
+        <div class="slider-group">
+          <label for="fzInW"><span>Zugkraft F<sub>Z</sub></span><span class="value" id="fzOutW">10 N</span></label>
+          <div class="slider-controls">
+            <input id="fzInW" type="range" min="0" max="200" value="10" step="1" aria-label="Zugkraft">
+            <input id="fzTextW" class="value-input" type="text" value="10" aria-label="Zugkraft als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="mInW"><span>Masse m</span><span class="value" id="mOutW">5,0 kg</span></label>
+          <div class="slider-controls">
+            <input id="mInW" type="range" min="10" max="200" value="50" step="5" aria-label="Masse in kg">
+            <input id="mTextW" class="value-input" type="text" value="5,0" aria-label="Masse als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="muHInW"><span>Haftreibungskoeffizient μ<sub>H</sub></span><span class="value" id="muHOutW">0,40</span></label>
+          <div class="slider-controls">
+            <input id="muHInW" type="range" min="0" max="100" value="40" step="1" aria-label="Haftreibungskoeffizient">
+            <input id="muHTextW" class="value-input" type="text" value="0,40" aria-label="Haftreibungskoeffizient als Zahl">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label for="muGInW"><span>Gleitreibungskoeffizient μ<sub>G</sub></span><span class="value" id="muGOutW">0,30</span></label>
+          <div class="slider-controls">
+            <input id="muGInW" type="range" min="0" max="100" value="30" step="1" aria-label="Gleitreibungskoeffizient">
+            <input id="muGTextW" class="value-input" type="text" value="0,30" aria-label="Gleitreibungskoeffizient als Zahl">
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label><input type="checkbox" id="showFGW" checked>
+            <span>F<sub>G</sub> (Gewichtskraft)</span>
+          </label>
+          <label><input type="checkbox" id="showFNW" checked>
+            <span>F<sub>N</sub> (Normalkraft)</span>
+          </label>
+          <label><input type="checkbox" id="showFZW" checked>
+            <span>F<sub>Z</sub> (Zugkraft)</span>
+          </label>
+          <label><input type="checkbox" id="showFRW" checked>
+            <span>F<sub>R</sub> (Reibungskraft)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- ERKLÄRUNG                                                        -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <div id="erklaerung-tab" class="tab-content" role="tabpanel">
+    <div class="hint-box" style="max-width:720px; margin:0 auto;">
+
+      <h2 style="text-align:center; font-size:20px; font-weight:700; margin:0 0 18px; text-decoration:underline;">Die drei Arten der Reibung</h2>
+
+      <p>Reibung tritt immer dort auf, wo sich zwei Oberflächen berühren. Je nachdem, ob ein Körper ruht, gleitet oder rollt, unterscheidet man drei Arten der Reibung. Die Stärke der Reibung hängt vom <b>Reibungskoeffizienten</b> (auch Reibungszahl) μ der Materialien ab. Je höher der Wert von μ, desto stärker ist die Reibung.</p>
+
+      <!-- 1. Haftreibung -->
+      <h3 style="font-size:16px; font-weight:700; margin:20px 0 8px;">1. Die Haftreibung</h3>
+      <p><b>Beschreibung:</b> Die Haftreibung <span class="vec">F</span><sub>HR</sub> verhindert, dass ein ruhender Körper anfängt zu gleiten. Sie wirkt nur, solange der Körper in Ruhe ist. Dabei passt sie sich automatisch an die angreifende Kraft (z.&nbsp;B. die Hangabtriebskraft) an – sie ist also keine feste Größe, sondern wächst mit dieser Kraft mit. Erst wenn die angreifende Kraft den Maximalwert <span class="vec">F</span><sub>HR,max</sub> überschreitet, beginnt der Körper zu gleiten.</p>
+      <p style="text-align:center; font-weight:700; text-decoration:underline; margin:10px 0;">Die Haftreibung hängt nicht von der Größe der Auflagefläche ab!</p>
+      <div class="formula-box" style="font-size:17px;">
+        |<span class="vec">F</span><sub>HR,max</sub>| &nbsp;=&nbsp; |<span class="vec">F</span><sub>N</sub>| &nbsp;·&nbsp; μ<sub>HR</sub>
+      </div>
+      <p>Typischer Wert: μ<sub>H</sub> = 0,5 (Holz-Holz)</p>
+      <p><b>Beispiel:</b> Ein Buch, das auf einer leicht schräg gestellten Tischplatte liegt, ohne zu rutschen.</p>
+
+      <!-- 2. Gleitreibung -->
+      <h3 style="font-size:16px; font-weight:700; margin:20px 0 8px;">2. Die Gleitreibung</h3>
+      <p><b>Beschreibung:</b> Die Gleitreibung <span class="vec">F</span><sub>GR</sub> bremst einen Körper, der bereits über eine Oberfläche gleitet. Sie wirkt immer <em>entgegen der Bewegungsrichtung</em>.</p>
+      <div class="formula-box" style="font-size:17px;">
+        |<span class="vec">F</span><sub>GR</sub>| &nbsp;=&nbsp; |<span class="vec">F</span><sub>N</sub>| &nbsp;·&nbsp; μ<sub>GR</sub>
+      </div>
+      <p>Typischer Wert: μ<sub>G</sub> = 0,3 (Holz-Holz)</p>
+      <p><b>Beispiel:</b> Ein Schlitten, der auf der Ebene über den Schnee rutscht, wird langsamer.</p>
+
+      <!-- 3. Rollreibung -->
+      <h3 style="font-size:16px; font-weight:700; margin:20px 0 8px;">3. Die Rollreibung</h3>
+      <p><b>Beschreibung:</b> Die Rollreibung <span class="vec">F</span><sub>RR</sub> bremst einen rollenden Körper. Sie ist <em>deutlich kleiner</em> als Haft- und Gleitreibung.</p>
+      <div class="formula-box" style="font-size:17px;">
+        |<span class="vec">F</span><sub>RR</sub>| &nbsp;=&nbsp; |<span class="vec">F</span><sub>N</sub>| &nbsp;·&nbsp; μ<sub>Roll</sub>
+      </div>
+      <p>Typischer Wert: μ<sub>Roll</sub> = 0,002 (Holz-Holz)</p>
+      <p><b>Beispiel:</b> Ein Fahrradreifen oder eine Kugel, die auf dem Boden rollt.</p>
+
+      <!-- Vergleich -->
+      <div class="note" style="margin-top:22px;">
+        <p style="margin:0 0 8px;">Für ein und dasselbe Material-Paar gilt <b>fast immer</b>:</p>
+        <div class="formula-box" style="font-size:17px; background:transparent; border:none; padding:4px 0;">
+          μ<sub>HR</sub> &nbsp;&gt;&nbsp; μ<sub>GR</sub> &nbsp;&gt;&nbsp; μ<sub>Roll</sub>
+        </div>
+        <p style="margin:10px 0 0;">μ ist die <em>Reibungszahl</em> (oder der Reibungskoeffizient). Sie hängt von den beiden Materialien ab, die aneinander reiben.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════════════
+// KONSTANTEN
+// ════════════════════════════════════════════════════════════════════════
+const G = 9.81;                    // Fallbeschleunigung
+const GLEIT_FAKTOR = 0.7;          // μ_G = 0,7 · μ_H
+
+// Farben (siehe Vorgabe)
+const COLOR = {
+  brand:      '#534AB7',
+  brandDark:  '#3C3489',
+  velocity:   '#378ADD',
+  force:      '#D85A30',
+  accel:      '#27A567',
+  path:       '#888780',
+  FH:         '#B14A24',  // Komponente Hangabtrieb (dunkleres Orange)
+  FN:         '#185FA5',  // Komponente Normal (dunkleres Blau)
+  FR:         '#7A4FB7',  // Reibung (Vorgabe)
+  text:       '#2C2C2A',
+  text2:      '#5F5E5A',
+  wedge:      '#D8D5C9',
+  wedgeStroke:'#2C2C2A',
+  ground:     '#5F5E5A'
+};
+
+// Geometrie (Meter)
+const SLOPE_LEN_M = 3.0;           // Länge der Hypotenuse in Metern
+let SCALE = 110;                   // Pixel pro Meter (wird responsiv angepasst)
+let FSCALE = 1.2;                  // px pro Newton (wird je nach max. Kraft angepasst)
+
+// Decimal-Komma-Formatierung
+const fmt = (v, d) => (Math.abs(v) < 1e-9 ? 0 : v).toFixed(d).replace('.', ',');
+
+function decimalParse(s) {
+  if (typeof s !== 'string') return parseFloat(s);
+  return parseFloat(s.replace(',', '.'));
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// TAB-WECHSEL
+// ════════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  const tabs = document.querySelectorAll('.tab');
+  const contents = document.querySelectorAll('.tab-content');
+  tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+  contents.forEach(c => c.classList.remove('active'));
+
+  const map = { simulation: 0, waagrecht: 1, erklaerung: 2 };
+  const idMap = { simulation: 'simulation-tab', waagrecht: 'waagrecht-tab', erklaerung: 'erklaerung-tab' };
+  const idx = map[tab] != null ? map[tab] : 0;
+  tabs[idx].classList.add('active');
+  tabs[idx].setAttribute('aria-selected', 'true');
+  document.getElementById(idMap[tab] || 'simulation-tab').classList.add('active');
+
+  // Beim Wechsel auf die waagrechte Ebene: Canvas neu skalieren
+  // (clientWidth ist nur korrekt, wenn der Tab sichtbar ist)
+  if (tab === 'waagrecht' && typeof window.__resizeWaagrecht === 'function') {
+    window.__resizeWaagrecht();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SIMULATION
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const cv = document.getElementById('sim');
+  const ctx = cv.getContext('2d');
+
+  // DOM-Elemente
+  const aIn = document.getElementById('aIn');
+  const aText = document.getElementById('aText');
+  const aOut = document.getElementById('aOut');
+  const mIn = document.getElementById('mIn');
+  const mText = document.getElementById('mText');
+  const mOut = document.getElementById('mOut');
+  const muIn = document.getElementById('muIn');
+  const muText = document.getElementById('muText');
+  const muOut = document.getElementById('muOut');
+  const materialSelect = document.getElementById('materialSelect');
+  const showFG = document.getElementById('showFG');
+  const showComp = document.getElementById('showComp');
+  const showFR = document.getElementById('showFR');
+  const showAngle = document.getElementById('showAngle');
+  const useGleit = document.getElementById('useGleit');
+  const zeitlupeIn = document.getElementById('zeitlupeIn');
+  const resetBtn = document.getElementById('resetBtn');
+  const screenshotBtn = document.getElementById('screenshotBtn');
+
+  // State
+  let CW = 720, CH = 480;            // logische Canvas-Größe (CSS-px)
+  let dpr = window.devicePixelRatio || 1;
+  let alpha = 20 * Math.PI / 180;
+  let mass = 5.0;                    // kg
+  let muH = 0.40;
+  let rafId = null;
+  let lastT = 0;
+  let state = null;                  // s (m), v (m/s), sliding
+
+  // ────────────────────────────────────────────────────────────────────
+  // Canvas-Skalierung (devicePixelRatio + responsive)
+  // ────────────────────────────────────────────────────────────────────
+  function resizeCanvas() {
+    const wrap = cv.parentElement;
+    const cssW = Math.max(320, wrap.clientWidth - 20);
+    const cssH = Math.round(cssW * 0.62);
+    CW = cssW;
+    CH = cssH;
+    dpr = window.devicePixelRatio || 1;
+    cv.style.width = cssW + 'px';
+    cv.style.height = cssH + 'px';
+    cv.width = Math.round(cssW * dpr);
+    cv.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Maßstab anpassen, damit die Ebene gut hineinpasst
+    SCALE = Math.min((cssW - 120) / SLOPE_LEN_M, (cssH - 120) / SLOPE_LEN_M / 0.7);
+    SCALE = Math.max(70, Math.min(160, SCALE));
+
+    draw();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Geometrie: rechtwinkliges Dreieck
+  //   - Rechter Winkel unten links bei (BASE_X, BASE_Y)
+  //   - Hypotenuse: von oben-links nach unten-rechts
+  //   - Spitze oben: (BASE_X, BASE_Y - SLOPE·sin α)
+  //   - Fuß rechts:  (BASE_X + SLOPE·cos α, BASE_Y)
+  //   - Block rutscht von oben (Spitze) nach unten-rechts (Fuß)
+  // ────────────────────────────────────────────────────────────────────
+  function baseX() { return 60; }
+  function baseY() { return CH - 70; }
+
+  function slopeTop()    { return { x: baseX(), y: baseY() - SLOPE_LEN_M * SCALE * Math.sin(alpha) }; }
+  function slopeBottom() { return { x: baseX() + SLOPE_LEN_M * SCALE * Math.cos(alpha), y: baseY() }; }
+
+  // Position des Blocks (Kontaktpunkt) bei zurückgelegter Strecke s (in m)
+  function bodyContact(s_m) {
+    const top = slopeTop();
+    const px = s_m * SCALE;
+    return {
+      x: top.x + px * Math.cos(alpha),
+      y: top.y + px * Math.sin(alpha)
+    };
+  }
+  // Mittelpunkt des Blocks (versetzt um halbe Höhe in Normalrichtung "weg vom Hang")
+  function bodyCenter(s_m, blockSize) {
+    const c = bodyContact(s_m);
+    // Normale "nach außen": (sin α, -cos α)
+    return {
+      x: c.x + (blockSize / 2) * Math.sin(alpha),
+      y: c.y - (blockSize / 2) * Math.cos(alpha)
+    };
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Pfeile zeichnen
+  // ────────────────────────────────────────────────────────────────────
+  function arrow(x1, y1, x2, y2, color, width, opts) {
+    opts = opts || {};
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 1.5) return;
+    const head = Math.min(13, len * 0.4);
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    if (opts.dashed) ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - Math.cos(ang) * head * 0.35, y2 - Math.sin(ang) * head * 0.35);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - 0.42), y2 - head * Math.sin(ang - 0.42));
+    ctx.lineTo(x2 - head * Math.cos(ang + 0.42), y2 - head * Math.sin(ang + 0.42));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function dashedLine(x1, y1, x2, y2, color, w) {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Label „F" + Index als Subscript (links-ausgerichtet ab x,y)
+  function drawVecLabel(x, y, letter, sub, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    const lw = ctx.measureText(letter).width;
+    ctx.fillText(letter, x, y);
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(sub, x + lw + 1, y + 4);
+    ctx.restore();
+  }
+
+  // Label „F" + Index (rechts-ausgerichtet: rechte Kante bei x,y)
+  function drawVecLabelR(x, y, letter, sub, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    const lw = ctx.measureText(letter).width;
+    ctx.font = 'bold 11px sans-serif';
+    const sw = ctx.measureText(sub).width;
+    const totalW = lw + sw + 3;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(letter, x - totalW, y);
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(sub, x - totalW + lw + 1, y + 4);
+    ctx.restore();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Zeichenfunktionen
+  // ────────────────────────────────────────────────────────────────────
+  function drawBackground() {
+    ctx.clearRect(0, 0, CW, CH);
+    ctx.fillStyle = '#FAFAF8';
+    ctx.fillRect(0, 0, CW, CH);
+  }
+
+  function drawSlope() {
+    const top = slopeTop();
+    const bot = slopeBottom();
+    const bx = baseX(), by = baseY();
+
+    // Keil gefüllt
+    ctx.fillStyle = COLOR.wedge;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(top.x, top.y);
+    ctx.lineTo(bot.x, bot.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Schraffur
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(bx, by); ctx.lineTo(top.x, top.y); ctx.lineTo(bot.x, bot.y); ctx.closePath();
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(60,55,30,0.30)';
+    ctx.lineWidth = 0.7;
+    for (let off = -300; off < CW + 300; off += 9) {
+      ctx.beginPath();
+      ctx.moveTo(bx - 30 + off, by + 60);
+      ctx.lineTo(bx - 30 + off + 80, by - 60);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Konturlinien
+    ctx.strokeStyle = COLOR.wedgeStroke;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(bx, by); ctx.lineTo(top.x, top.y); ctx.lineTo(bot.x, bot.y); ctx.closePath();
+    ctx.stroke();
+
+    // Bodenlinie
+    ctx.strokeStyle = COLOR.ground;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(10, by); ctx.lineTo(CW - 10, by);
+    ctx.stroke();
+    // Bodenschraffur
+    ctx.strokeStyle = 'rgba(95,94,90,0.55)';
+    ctx.lineWidth = 0.7;
+    for (let x = 10; x < CW - 10; x += 10) {
+      ctx.beginPath();
+      ctx.moveTo(x, by);
+      ctx.lineTo(x - 6, by + 8);
+      ctx.stroke();
+    }
+  }
+
+  function drawAngleArc() {
+    if (!showAngle.checked) return;
+    if (alpha < 0.005) return;
+    const bot = slopeBottom();
+    const r = Math.min(46, SLOPE_LEN_M * SCALE * 0.18);
+    ctx.strokeStyle = COLOR.brand;
+    ctx.lineWidth = 1.6;
+    // Bogen zwischen Bodenlinie (Richtung π = nach links) und Hypotenuse (Richtung π + α)
+    ctx.beginPath();
+    ctx.arc(bot.x, bot.y, r, Math.PI + alpha, Math.PI, true);
+    ctx.stroke();
+
+    const labelAng = Math.PI + alpha / 2;
+    const lx = bot.x + (r + 16) * Math.cos(labelAng);
+    const ly = bot.y + (r + 16) * Math.sin(labelAng);
+    ctx.fillStyle = COLOR.brand;
+    ctx.font = '600 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('α', lx, ly);
+    ctx.font = '11px sans-serif';
+    ctx.fillStyle = COLOR.text2;
+    ctx.fillText(Math.round(alpha * 180 / Math.PI) + '°', lx, ly + 14);
+  }
+
+  function drawBlock() {
+    const blockSize = Math.max(28, Math.min(46, SCALE * 0.32));
+    const c = bodyCenter(state.s, blockSize);
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    ctx.rotate(alpha);
+
+    // Schatten
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(-blockSize / 2 + 2, -blockSize / 2 + 2, blockSize, blockSize);
+    // Block
+    ctx.fillStyle = COLOR.brand;
+    ctx.fillRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
+    ctx.strokeStyle = '#26215C';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
+    // m-Beschriftung
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('m', 0, 0);
+    ctx.restore();
+    return c;
+  }
+
+  function adaptiveFScale(FG) {
+    // Max. Kraft ≈ 120 px lang
+    return 120 / Math.max(1, FG);
+  }
+
+  function drawForces(center) {
+    const FG = mass * G;
+    const FH = FG * Math.sin(alpha);
+    const FN = FG * Math.cos(alpha);
+    const FRmax = muH * FN;
+    // Aktuelle Reibung: wenn ruhig & Bedingung erfüllt → FR = FH
+    //                   wenn rutscht  → FR = μ · FN  (μ_G falls aktiv)
+    let FR;
+    if (state.sliding) {
+      const mu = useGleit.checked ? muH * GLEIT_FAKTOR : muH;
+      FR = mu * FN;
+    } else {
+      FR = Math.min(FH, FRmax);
+    }
+
+    const fs = adaptiveFScale(FG);
+
+    // Richtungsvektoren
+    const hx = Math.cos(alpha), hy = Math.sin(alpha);     // hangabwärts (in Canvas)
+    const nx = Math.sin(alpha), ny = -Math.cos(alpha);    // Normale nach außen (weg vom Hang)
+
+    // ─── F_G senkrecht nach unten ───
+    if (showFG.checked) {
+      const len = FG * fs;
+      // Hilfslinien für Parallelogramm-Zerlegung
+      if (showComp.checked) {
+        const fgEndX = center.x;
+        const fgEndY = center.y + len;
+        const fhEndX = center.x + FH * fs * hx;
+        const fhEndY = center.y + FH * fs * hy;
+        // F_N zeigt nach außen (weg vom Hang), d.h. + Normalenrichtung
+        const fnEndX = center.x + FN * fs * nx;
+        const fnEndY = center.y + FN * fs * ny;
+        // Hilfslinie: F_H-Spitze → F_G-Spitze (Parallelogramm-Abschluss)
+        dashedLine(fhEndX, fhEndY, fgEndX, fgEndY, 'rgba(0,0,0,0.22)', 0.9);
+      }
+      arrow(center.x, center.y, center.x, center.y + len, COLOR.force, 2.6);
+      drawVecLabel(center.x + 7, center.y + len + 12, 'F', 'G', COLOR.force);
+    }
+
+    // ─── F_H entlang Hang ───
+    if (showComp.checked) {
+      const lenH = FH * fs;
+      const fhTipX = center.x + lenH * hx;
+      const fhTipY = center.y + lenH * hy;
+      arrow(center.x, center.y, fhTipX, fhTipY, COLOR.FH, 2.6);
+      drawVecLabel(fhTipX + 7 * hx + 2, fhTipY + 7 * hy + 10, 'F', 'H', COLOR.FH);
+
+      // F_N senkrecht zur Ebene, nach außen (weg vom Hang)
+      const lenN = FN * fs;
+      const fnX = center.x + lenN * nx;
+      const fnY = center.y + lenN * ny;
+      arrow(center.x, center.y, fnX, fnY, COLOR.FN, 2.6);
+      drawVecLabelR(fnX - 5, fnY - 6, 'F', 'N', COLOR.FN);
+    }
+
+    // ─── F_R entgegen Bewegungsrichtung (hangaufwärts), Start am Schwerpunkt ───
+    if (showFR.checked && FR > 0.05) {
+      const lenR = FR * fs;
+      const frTipX = center.x - lenR * hx;
+      const frTipY = center.y - lenR * hy;
+      arrow(center.x, center.y, frTipX, frTipY, COLOR.FR, 2.6);
+      drawVecLabelR(frTipX - 5, frTipY - 6, 'F', 'R', COLOR.FR);
+    }
+
+    // ─── Geschwindigkeit v während des Rutschens ───
+    if (state.sliding && state.v > 0.02) {
+      const lenV = Math.min(140, state.v * 22);
+      const off = 36;
+      const sx = center.x + off * nx;
+      const sy = center.y + off * ny;
+      const vTipX = sx + lenV * hx;
+      const vTipY = sy + lenV * hy;
+      arrow(sx, sy, vTipX, vTipY, COLOR.velocity, 2.6);
+      ctx.save();
+      ctx.fillStyle = COLOR.velocity;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('v', vTipX + 5, vTipY - 4);
+      ctx.restore();
+    }
+  }
+
+  function drawScaleBar() {
+    const x = 14, y = CH - 14;
+    const len = SCALE; // entspricht 1 m
+    ctx.save();
+    ctx.strokeStyle = COLOR.text;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + len, y - 4); ctx.lineTo(x + len, y + 4); ctx.stroke();
+    ctx.font = '600 11px sans-serif';
+    ctx.fillStyle = COLOR.text;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('1 m', x + len / 2, y - 6);
+    ctx.restore();
+  }
+
+  function draw() {
+    if (!state) return;
+    drawBackground();
+    drawSlope();
+    drawAngleArc();
+    const center = drawBlock();
+    drawForces(center);
+    drawScaleBar();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Physik
+  // ────────────────────────────────────────────────────────────────────
+  function isStaticHold() {
+    return Math.tan(alpha) <= muH + 1e-9;
+  }
+
+  function step(dt) {
+    if (!isStaticHold()) {
+      // Block rutscht
+      state.sliding = true;
+      const aH = G * Math.sin(alpha);
+      const mu = useGleit.checked ? muH * GLEIT_FAKTOR : muH;
+      const aR = mu * G * Math.cos(alpha);
+      let a = aH - aR;
+      if (a < 0) a = 0;
+      state.v += a * dt;
+      state.s += state.v * dt;
+    } else {
+      // Block bleibt liegen
+      state.sliding = false;
+      state.v = 0;
+    }
+    // Auto-Loop: am Ende wieder oben anfangen
+    if (state.s >= SLOPE_LEN_M) {
+      state.s = 0.25 * SLOPE_LEN_M;
+      state.v = 0;
+    }
+  }
+
+  function loop(t) {
+    const slowFactor = zeitlupeIn.checked ? 0.25 : 1.0;
+    const dt = Math.min(0.05, (t - lastT) / 1000) * slowFactor;
+    lastT = t;
+    step(dt);
+    updateLivePanel();
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Live-Panel + Statusbox aktualisieren
+  // ────────────────────────────────────────────────────────────────────
+  function updateLivePanel() {
+    const FG = mass * G;
+    const FH = FG * Math.sin(alpha);
+    const FN = FG * Math.cos(alpha);
+    const FRmax = muH * FN;
+
+    const box = document.getElementById('statusBox');
+    const head = document.getElementById('statusHead');
+    const txt = document.getElementById('statusText');
+    if (isStaticHold()) {
+      box.className = 'status-box bleibt';
+      head.textContent = '✓ BLOCK BLEIBT LIEGEN';
+      txt.innerHTML = 'F<sub>H</sub> (' + fmt(FH, 1) + ' N) ≤ F<sub>R,max</sub> (' + fmt(FRmax, 1) + ' N) — die Haftreibung hält den Block.';
+    } else {
+      box.className = 'status-box rutscht';
+      head.textContent = '⚠ BLOCK RUTSCHT';
+      txt.innerHTML = 'F<sub>H</sub> (' + fmt(FH, 1) + ' N) &gt; F<sub>R,max</sub> (' + fmt(FRmax, 1) + ' N) — die Haftreibung reicht nicht mehr aus.';
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Reset & Start
+  // ────────────────────────────────────────────────────────────────────
+  function reset() {
+    // Startposition: 25 % von oben → Block sitzt auf ca. 75 % der maximalen Höhe
+    state = { s: 0.25 * SLOPE_LEN_M, v: 0, sliding: false };
+    updateLivePanel();
+    draw();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Slider / Texteingabe
+  // ────────────────────────────────────────────────────────────────────
+  function syncMaterialDropdown() {
+    // Wenn μ exakt einem Preset entspricht → setzen, sonst „custom"
+    const v = muH.toFixed(2);
+    const opts = materialSelect.options;
+    let match = 'custom';
+    for (let i = 0; i < opts.length; i++) {
+      if (opts[i].value !== 'custom' && parseFloat(opts[i].value).toFixed(2) === v) {
+        match = opts[i].value;
+        break;
+      }
+    }
+    materialSelect.value = match;
+  }
+
+  function updateAlphaFromSlider() {
+    const v = parseInt(aIn.value, 10);
+    alpha = v * Math.PI / 180;
+    aOut.textContent = v + '°';
+    aText.value = v.toString();
+    updateLivePanel(); draw();
+  }
+  function updateAlphaFromText() {
+    let v = decimalParse(aText.value);
+    if (isNaN(v)) v = parseInt(aIn.value, 10);
+    v = Math.max(0, Math.min(60, Math.round(v)));
+    aIn.value = v;
+    alpha = v * Math.PI / 180;
+    aOut.textContent = v + '°';
+    aText.value = v.toString();
+    updateLivePanel(); draw();
+  }
+
+  function updateMassFromSlider() {
+    const raw = parseInt(mIn.value, 10) / 10; // 10..200 → 1.0..20.0 kg
+    mass = raw;
+    mOut.textContent = fmt(raw, 1) + ' kg';
+    mText.value = fmt(raw, 1);
+    updateLivePanel(); draw();
+  }
+  function updateMassFromText() {
+    let v = decimalParse(mText.value);
+    if (isNaN(v)) v = parseInt(mIn.value, 10) / 10;
+    v = Math.max(1.0, Math.min(20.0, Math.round(v * 2) / 2));
+    mIn.value = Math.round(v * 10);
+    mass = v;
+    mOut.textContent = fmt(v, 1) + ' kg';
+    mText.value = fmt(v, 1);
+    updateLivePanel(); draw();
+  }
+
+  function updateMuFromSlider() {
+    const v = parseInt(muIn.value, 10) / 100;
+    muH = v;
+    muOut.textContent = fmt(v, 2);
+    muText.value = fmt(v, 2);
+    syncMaterialDropdown();
+    updateLivePanel(); draw();
+  }
+  function updateMuFromText() {
+    let v = decimalParse(muText.value);
+    if (isNaN(v)) v = parseInt(muIn.value, 10) / 100;
+    v = Math.max(0, Math.min(1.0, Math.round(v * 100) / 100));
+    muIn.value = Math.round(v * 100);
+    muH = v;
+    muOut.textContent = fmt(v, 2);
+    muText.value = fmt(v, 2);
+    syncMaterialDropdown();
+    updateLivePanel(); draw();
+  }
+
+  function onMaterialChange() {
+    const val = materialSelect.value;
+    if (val === 'custom') return;
+    const v = parseFloat(val);
+    muH = v;
+    muIn.value = Math.round(v * 100);
+    muOut.textContent = fmt(v, 2);
+    muText.value = fmt(v, 2);
+    updateLivePanel(); draw();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Screenshot
+  // ────────────────────────────────────────────────────────────────────
+  function takeScreenshot() {
+    const padBottom = 130;
+    const tw = cv.width;
+    const th = cv.height + Math.round(padBottom * dpr);
+    const tmp = document.createElement('canvas');
+    tmp.width = tw;
+    tmp.height = th;
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = '#ffffff';
+    tctx.fillRect(0, 0, tw, th);
+    tctx.drawImage(cv, 0, 0);
+    tctx.setTransform(dpr, 0, 0, dpr, 0, cv.height);
+
+    tctx.fillStyle = '#f5f5f0';
+    tctx.fillRect(0, 0, CW, padBottom);
+
+    tctx.fillStyle = COLOR.text;
+    tctx.font = '600 14px sans-serif';
+    tctx.textAlign = 'left';
+    tctx.fillText('Simulationsparameter', 16, 22);
+
+    tctx.font = '13px sans-serif';
+    tctx.fillStyle = COLOR.text;
+    const FG = mass * G;
+    const FH = FG * Math.sin(alpha);
+    const FN = FG * Math.cos(alpha);
+    const FRmax = muH * FN;
+    const lines = [
+      'α = ' + fmt(alpha * 180 / Math.PI, 0) + '°    m = ' + fmt(mass, 1) + ' kg    μH = ' + fmt(muH, 2) + '    g = 9,81 m/s²',
+      'FG = ' + fmt(FG, 1) + ' N    FH = ' + fmt(FH, 1) + ' N    FN = ' + fmt(FN, 1) + ' N    FR,max = ' + fmt(FRmax, 1) + ' N',
+      'Grenzwinkel αmax = ' + fmt(Math.atan(muH) * 180 / Math.PI, 1) + '°    →   ' + (isStaticHold() ? 'BLOCK BLEIBT LIEGEN' : 'BLOCK RUTSCHT')
+    ];
+    let yy = 46;
+    for (const l of lines) { tctx.fillText(l, 16, yy); yy += 22; }
+
+    const date = new Date();
+    tctx.font = '11px sans-serif';
+    tctx.fillStyle = COLOR.text2;
+    tctx.textAlign = 'right';
+    tctx.fillText(date.toLocaleDateString('de-DE') + ' ' + date.toLocaleTimeString('de-DE'), CW - 16, padBottom - 10);
+
+    const link = document.createElement('a');
+    link.download = 'haftreibung-schiefe-ebene-' + Date.now() + '.png';
+    link.href = tmp.toDataURL('image/png');
+    link.click();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Event-Handler
+  // ────────────────────────────────────────────────────────────────────
+  resetBtn.addEventListener('click', reset);
+  screenshotBtn.addEventListener('click', takeScreenshot);
+
+  aIn.addEventListener('input', updateAlphaFromSlider);
+  aText.addEventListener('change', updateAlphaFromText);
+  aText.addEventListener('blur', updateAlphaFromText);
+  mIn.addEventListener('input', updateMassFromSlider);
+  mText.addEventListener('change', updateMassFromText);
+  mText.addEventListener('blur', updateMassFromText);
+  muIn.addEventListener('input', updateMuFromSlider);
+  muText.addEventListener('change', updateMuFromText);
+  muText.addEventListener('blur', updateMuFromText);
+  materialSelect.addEventListener('change', onMaterialChange);
+
+  [showFG, showComp, showFR, showAngle, useGleit].forEach(el => el.addEventListener('change', () => { updateLivePanel(); draw(); }));
+
+  window.addEventListener('resize', resizeCanvas);
+
+  // Init
+  resizeCanvas();
+  reset();
+  syncMaterialDropdown();
+  // Animation läuft automatisch (Auto-Loop)
+  lastT = performance.now();
+  rafId = requestAnimationFrame(loop);
+})();
+
+// ════════════════════════════════════════════════════════════════════════
+// SIMULATION – WAAGRECHTE EBENE
+// ════════════════════════════════════════════════════════════════════════
+(function(){
+  const cv = document.getElementById('simW');
+  const ctx = cv.getContext('2d');
+
+  // DOM-Elemente
+  const fzIn = document.getElementById('fzInW');
+  const fzText = document.getElementById('fzTextW');
+  const fzOut = document.getElementById('fzOutW');
+  const mIn = document.getElementById('mInW');
+  const mText = document.getElementById('mTextW');
+  const mOut = document.getElementById('mOutW');
+  const muHIn = document.getElementById('muHInW');
+  const muHText = document.getElementById('muHTextW');
+  const muHOut = document.getElementById('muHOutW');
+  const muGIn = document.getElementById('muGInW');
+  const muGText = document.getElementById('muGTextW');
+  const muGOut = document.getElementById('muGOutW');
+  const showFG = document.getElementById('showFGW');
+  const showFN = document.getElementById('showFNW');
+  const showFZ = document.getElementById('showFZW');
+  const showFR = document.getElementById('showFRW');
+  const zeitlupeIn = document.getElementById('zeitlupeInW');
+  const resetBtn = document.getElementById('resetBtnW');
+  const screenshotBtn = document.getElementById('screenshotBtnW');
+
+  // Farben
+  const COL = {
+    brand:    '#534AB7',
+    force:    '#D85A30',  // F_G
+    FN:       '#185FA5',  // F_N
+    FZ:       '#27A567',  // F_Z (Zugkraft) – grün als „Antrieb"
+    FR:       '#7A4FB7',  // F_R
+    velocity: '#378ADD',  // v
+    text:     '#2C2C2A',
+    text2:    '#5F5E5A',
+    ground:   '#5F5E5A'
+  };
+
+  // State
+  let CW = 720, CH = 480;
+  let dpr = window.devicePixelRatio || 1;
+  let FZ = 10;        // N
+  let mass = 5.0;     // kg
+  let muH = 0.40;
+  let muG = 0.30;
+  let rafId = null;
+  let lastT = 0;
+  let state = null;
+  let SCALE = 110;    // px pro Meter
+  const TRACK_LEN_M = 4.0;
+  const START_X_M = 0.4;  // Startposition des Klotzes in Metern (vom linken Ende der Bahn)
+
+  // ────────────────────────────────────────────────────────────────────
+  function resizeCanvas() {
+    const wrap = cv.parentElement;
+    const cssW = Math.max(320, wrap.clientWidth - 20);
+    const cssH = Math.round(cssW * 0.62);
+    CW = cssW;
+    CH = cssH;
+    dpr = window.devicePixelRatio || 1;
+    cv.style.width = cssW + 'px';
+    cv.style.height = cssH + 'px';
+    cv.width = Math.round(cssW * dpr);
+    cv.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    SCALE = Math.min((cssW - 80) / (TRACK_LEN_M + 1.0), 130);
+    SCALE = Math.max(60, SCALE);
+    draw();
+  }
+  // Expose für switchTab
+  window.__resizeWaagrecht = resizeCanvas;
+
+  function floorY() { return CH - 80; }
+  function trackX0() { return 40; }
+  function trackX1() { return trackX0() + TRACK_LEN_M * SCALE; }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Pfeile + Labels
+  // ────────────────────────────────────────────────────────────────────
+  function arrow(x1, y1, x2, y2, color, width) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 1.5) return;
+    const head = Math.min(13, len * 0.4);
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - Math.cos(ang) * head * 0.35, y2 - Math.sin(ang) * head * 0.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - 0.42), y2 - head * Math.sin(ang - 0.42));
+    ctx.lineTo(x2 - head * Math.cos(ang + 0.42), y2 - head * Math.sin(ang + 0.42));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Label „F" + Index (links-ausgerichtet)
+  function drawLabel(x, y, letter, sub, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    const lw = ctx.measureText(letter).width;
+    ctx.fillText(letter, x, y);
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(sub, x + lw + 1, y + 4);
+    ctx.restore();
+  }
+  // Label rechts-ausgerichtet
+  function drawLabelR(x, y, letter, sub, color) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textBaseline = 'alphabetic';
+    const lw = ctx.measureText(letter).width;
+    ctx.font = 'bold 11px sans-serif';
+    const sw = ctx.measureText(sub).width;
+    const totalW = lw + sw + 3;
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(letter, x - totalW, y);
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(sub, x - totalW + lw + 1, y + 4);
+    ctx.restore();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Zeichenfunktionen
+  // ────────────────────────────────────────────────────────────────────
+  function drawBackground() {
+    ctx.clearRect(0, 0, CW, CH);
+    ctx.fillStyle = '#FAFAF8';
+    ctx.fillRect(0, 0, CW, CH);
+  }
+
+  function drawFloor() {
+    const fy = floorY();
+    // Bodenlinie
+    ctx.strokeStyle = COL.text;
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(10, fy);
+    ctx.lineTo(CW - 10, fy);
+    ctx.stroke();
+    // Schraffur darunter
+    ctx.strokeStyle = 'rgba(95,94,90,0.55)';
+    ctx.lineWidth = 0.7;
+    for (let x = 10; x < CW - 10; x += 10) {
+      ctx.beginPath();
+      ctx.moveTo(x, fy);
+      ctx.lineTo(x - 6, fy + 8);
+      ctx.stroke();
+    }
+  }
+
+  function drawBlock() {
+    const blockSize = Math.max(34, Math.min(50, SCALE * 0.36));
+    const fy = floorY();
+    const cx = trackX0() + state.x * SCALE;
+    const cy = fy - blockSize / 2;
+
+    ctx.save();
+    // Schatten
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(cx - blockSize / 2 + 2, cy - blockSize / 2 + 2, blockSize, blockSize);
+    // Block
+    ctx.fillStyle = COL.brand;
+    ctx.fillRect(cx - blockSize / 2, cy - blockSize / 2, blockSize, blockSize);
+    ctx.strokeStyle = '#26215C';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(cx - blockSize / 2, cy - blockSize / 2, blockSize, blockSize);
+    // m-Label
+    ctx.fillStyle = '#fff';
+    ctx.font = '600 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('m', cx, cy);
+    ctx.restore();
+
+    return { x: cx, y: cy, size: blockSize };
+  }
+
+  function adaptiveFScale(maxVal) {
+    return 120 / Math.max(1, maxVal);
+  }
+
+  function drawForces(center) {
+    const FG = mass * G;
+    const FN = FG;  // waagrechte Ebene → F_N = F_G
+    const FRmaxHaft = muH * FN;
+    let FR;
+    if (state.sliding) {
+      FR = muG * FN;
+    } else {
+      FR = Math.min(FZ, FRmaxHaft);
+    }
+
+    // Skalierung: orientiert sich am größten möglichen Wert
+    const fs = adaptiveFScale(Math.max(FG, FZ, FRmaxHaft, 1));
+
+    // ─── F_G nach unten ───
+    if (showFG.checked && FG > 0.05) {
+      const len = FG * fs;
+      arrow(center.x, center.y, center.x, center.y + len, COL.force, 2.6);
+      drawLabel(center.x + 7, center.y + len + 12, 'F', 'G', COL.force);
+    }
+
+    // ─── F_N nach oben ───
+    if (showFN.checked && FN > 0.05) {
+      const len = FN * fs;
+      arrow(center.x, center.y, center.x, center.y - len, COL.FN, 2.6);
+      drawLabel(center.x + 7, center.y - len - 4, 'F', 'N', COL.FN);
+    }
+
+    // ─── F_Z nach rechts ───
+    if (showFZ.checked && FZ > 0.05) {
+      const len = FZ * fs;
+      arrow(center.x, center.y, center.x + len, center.y, COL.FZ, 2.6);
+      drawLabel(center.x + len + 6, center.y - 4, 'F', 'Z', COL.FZ);
+    }
+
+    // ─── F_R nach links (entgegen Bewegungsrichtung), Start am Schwerpunkt ───
+    if (showFR.checked && FR > 0.05) {
+      const len = FR * fs;
+      arrow(center.x, center.y, center.x - len, center.y, COL.FR, 2.6);
+      drawLabelR(center.x - len - 4, center.y - 4, 'F', 'R', COL.FR);
+    }
+
+    // ─── Geschwindigkeit v ───
+    if (state.sliding && state.v > 0.02) {
+      const lenV = Math.min(140, state.v * 22);
+      const off = center.size / 2 + 16;
+      const sx = center.x;
+      const sy = center.y - off;
+      arrow(sx, sy, sx + lenV, sy, COL.velocity, 2.6);
+      ctx.save();
+      ctx.fillStyle = COL.velocity;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('v', sx + lenV + 5, sy - 4);
+      ctx.restore();
+    }
+  }
+
+  function drawScaleBar() {
+    const x = 14, y = CH - 14;
+    const len = SCALE;
+    ctx.save();
+    ctx.strokeStyle = COL.text;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x, y + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x + len, y - 4); ctx.lineTo(x + len, y + 4); ctx.stroke();
+    ctx.font = '600 11px sans-serif';
+    ctx.fillStyle = COL.text;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('1 m', x + len / 2, y - 6);
+    ctx.restore();
+  }
+
+  function draw() {
+    if (!state) return;
+    drawBackground();
+    drawFloor();
+    const center = drawBlock();
+    drawForces(center);
+    drawScaleBar();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Physik
+  // ────────────────────────────────────────────────────────────────────
+  function isStaticHold() {
+    const FN = mass * G;
+    return FZ <= muH * FN + 1e-9;
+  }
+
+  function step(dt) {
+    const FN = mass * G;
+    const FRmaxHaft = muH * FN;
+
+    if (FZ > FRmaxHaft) {
+      // Block rutscht
+      state.sliding = true;
+      const FRgleit = muG * FN;
+      let a = (FZ - FRgleit) / mass;
+      if (a < 0) a = 0;
+      state.v += a * dt;
+      state.x += state.v * dt;
+    } else {
+      // Block bleibt liegen
+      state.sliding = false;
+      state.v = 0;
+    }
+
+    // Auto-Loop: am Ende der Bahn wieder von vorne
+    if (state.x >= TRACK_LEN_M - 0.5) {
+      state.x = START_X_M;
+      state.v = 0;
+    }
+  }
+
+  function loop(t) {
+    const slowFactor = zeitlupeIn.checked ? 0.25 : 1.0;
+    const dt = Math.min(0.05, (t - lastT) / 1000) * slowFactor;
+    lastT = t;
+    step(dt);
+    updateStatus();
+    draw();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function updateStatus() {
+    const FN = mass * G;
+    const FRmaxHaft = muH * FN;
+    const box = document.getElementById('statusBoxW');
+    const head = document.getElementById('statusHeadW');
+    const txt = document.getElementById('statusTextW');
+    if (isStaticHold()) {
+      box.className = 'status-box bleibt';
+      head.textContent = '✓ BLOCK BLEIBT LIEGEN';
+      txt.innerHTML = 'F<sub>Z</sub> (' + fmt(FZ, 1) + ' N) ≤ F<sub>R,max</sub> (' + fmt(FRmaxHaft, 1) + ' N) — die Haftreibung hält den Block.';
+    } else {
+      box.className = 'status-box rutscht';
+      head.textContent = '⚠ BLOCK RUTSCHT';
+      txt.innerHTML = 'F<sub>Z</sub> (' + fmt(FZ, 1) + ' N) &gt; F<sub>R,max</sub> (' + fmt(FRmaxHaft, 1) + ' N) — die Haftreibung reicht nicht mehr aus.';
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Reset & Start
+  // ────────────────────────────────────────────────────────────────────
+  function reset() {
+    state = { x: START_X_M, v: 0, sliding: false };
+    updateStatus();
+    draw();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Slider / Texteingabe
+  // ────────────────────────────────────────────────────────────────────
+  function updateFZFromSlider() {
+    FZ = parseInt(fzIn.value, 10);
+    fzOut.textContent = FZ + ' N';
+    fzText.value = FZ.toString();
+    updateStatus(); draw();
+  }
+  function updateFZFromText() {
+    let v = decimalParse(fzText.value);
+    if (isNaN(v)) v = parseInt(fzIn.value, 10);
+    v = Math.max(0, Math.min(200, Math.round(v)));
+    fzIn.value = v;
+    FZ = v;
+    fzOut.textContent = v + ' N';
+    fzText.value = v.toString();
+    updateStatus(); draw();
+  }
+
+  function updateMFromSlider() {
+    const v = parseInt(mIn.value, 10) / 10;
+    mass = v;
+    mOut.textContent = fmt(v, 1) + ' kg';
+    mText.value = fmt(v, 1);
+    updateStatus(); draw();
+  }
+  function updateMFromText() {
+    let v = decimalParse(mText.value);
+    if (isNaN(v)) v = parseInt(mIn.value, 10) / 10;
+    v = Math.max(1.0, Math.min(20.0, Math.round(v * 2) / 2));
+    mIn.value = Math.round(v * 10);
+    mass = v;
+    mOut.textContent = fmt(v, 1) + ' kg';
+    mText.value = fmt(v, 1);
+    updateStatus(); draw();
+  }
+
+  function updateMuHFromSlider() {
+    const v = parseInt(muHIn.value, 10) / 100;
+    muH = v;
+    muHOut.textContent = fmt(v, 2);
+    muHText.value = fmt(v, 2);
+    updateStatus(); draw();
+  }
+  function updateMuHFromText() {
+    let v = decimalParse(muHText.value);
+    if (isNaN(v)) v = parseInt(muHIn.value, 10) / 100;
+    v = Math.max(0, Math.min(1.0, Math.round(v * 100) / 100));
+    muHIn.value = Math.round(v * 100);
+    muH = v;
+    muHOut.textContent = fmt(v, 2);
+    muHText.value = fmt(v, 2);
+    updateStatus(); draw();
+  }
+
+  function updateMuGFromSlider() {
+    const v = parseInt(muGIn.value, 10) / 100;
+    muG = v;
+    muGOut.textContent = fmt(v, 2);
+    muGText.value = fmt(v, 2);
+    updateStatus(); draw();
+  }
+  function updateMuGFromText() {
+    let v = decimalParse(muGText.value);
+    if (isNaN(v)) v = parseInt(muGIn.value, 10) / 100;
+    v = Math.max(0, Math.min(1.0, Math.round(v * 100) / 100));
+    muGIn.value = Math.round(v * 100);
+    muG = v;
+    muGOut.textContent = fmt(v, 2);
+    muGText.value = fmt(v, 2);
+    updateStatus(); draw();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Screenshot
+  // ────────────────────────────────────────────────────────────────────
+  function takeScreenshot() {
+    const padBottom = 110;
+    const tw = cv.width;
+    const th = cv.height + Math.round(padBottom * dpr);
+    const tmp = document.createElement('canvas');
+    tmp.width = tw;
+    tmp.height = th;
+    const tctx = tmp.getContext('2d');
+    tctx.fillStyle = '#ffffff';
+    tctx.fillRect(0, 0, tw, th);
+    tctx.drawImage(cv, 0, 0);
+    tctx.setTransform(dpr, 0, 0, dpr, 0, cv.height);
+
+    tctx.fillStyle = '#f5f5f0';
+    tctx.fillRect(0, 0, CW, padBottom);
+
+    tctx.fillStyle = COL.text;
+    tctx.font = '600 14px sans-serif';
+    tctx.textAlign = 'left';
+    tctx.fillText('Simulationsparameter (waagrechte Ebene)', 16, 22);
+
+    tctx.font = '13px sans-serif';
+    const FN = mass * G;
+    const FRmaxHaft = muH * FN;
+    const lines = [
+      'F_Z = ' + fmt(FZ, 1) + ' N    m = ' + fmt(mass, 1) + ' kg    μH = ' + fmt(muH, 2) + '    μG = ' + fmt(muG, 2),
+      'F_G = F_N = ' + fmt(FN, 1) + ' N    F_R,max(Haft) = ' + fmt(FRmaxHaft, 1) + ' N',
+      'Zustand: ' + (isStaticHold() ? 'BLOCK BLEIBT LIEGEN' : 'BLOCK RUTSCHT')
+    ];
+    let yy = 46;
+    for (const l of lines) { tctx.fillText(l, 16, yy); yy += 20; }
+
+    const date = new Date();
+    tctx.font = '11px sans-serif';
+    tctx.fillStyle = COL.text2;
+    tctx.textAlign = 'right';
+    tctx.fillText(date.toLocaleDateString('de-DE') + ' ' + date.toLocaleTimeString('de-DE'), CW - 16, padBottom - 10);
+
+    const link = document.createElement('a');
+    link.download = 'haftreibung-waagrecht-' + Date.now() + '.png';
+    link.href = tmp.toDataURL('image/png');
+    link.click();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Event-Handler
+  // ────────────────────────────────────────────────────────────────────
+  resetBtn.addEventListener('click', reset);
+  screenshotBtn.addEventListener('click', takeScreenshot);
+
+  fzIn.addEventListener('input', updateFZFromSlider);
+  fzText.addEventListener('change', updateFZFromText);
+  fzText.addEventListener('blur', updateFZFromText);
+  mIn.addEventListener('input', updateMFromSlider);
+  mText.addEventListener('change', updateMFromText);
+  mText.addEventListener('blur', updateMFromText);
+  muHIn.addEventListener('input', updateMuHFromSlider);
+  muHText.addEventListener('change', updateMuHFromText);
+  muHText.addEventListener('blur', updateMuHFromText);
+  muGIn.addEventListener('input', updateMuGFromSlider);
+  muGText.addEventListener('change', updateMuGFromText);
+  muGText.addEventListener('blur', updateMuGFromText);
+
+  [showFG, showFN, showFZ, showFR].forEach(el => el.addEventListener('change', () => { updateStatus(); draw(); }));
+
+  window.addEventListener('resize', resizeCanvas);
+
+  // Init
+  resizeCanvas();
+  reset();
+  // Animation läuft automatisch (Auto-Loop)
+  lastT = performance.now();
+  rafId = requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>
